@@ -26,6 +26,7 @@ namespace app
         network_handler::begin();
         light_sensor::begin();
         telegram::begin();
+        date::begin();
         lastday = date::get_day_of_the_month();
         // if (!mqtt_client::begin()) Serial.println("Errror durig mqtt client startup");
     }
