@@ -2,7 +2,7 @@
 
 `smart-loo-monitor` is an embedded IoT project built using the Arduino framework (PlatformIO target). It solves a practical everyday problem: preventing energy waste caused by accidentally leaving the bathroom light turned on for extended periods. 
 
-The device monitors ambient light levels using a digital light sensor and measures how long the light remains active. If the light stays on past a defined threshold, an automated alert notification is transmitted.
+The device monitors ambient light levels using a digital light sensor and measures how long the light remains active. If the light stays on past a defined threshold, an automated alert notification is transmitted. At the of the day it sends a recap of the day.
 
 In addition to serving its primary practical function, this project serves as an experimental setup for testing digital optical sensors and exploring embedded communication protocols, specifically Telegram Bot API integration and MQTT messaging.
 
@@ -65,42 +65,71 @@ The main routine manages the state machine for timing and alert dispatching:
 
 ```cpp
 #include <Arduino.h>
-
+#include "app.h"
 #include "network/network_handler.h"
 #include "sensor/light_sensor.h"
-#include "mqtt/mqtt_client.h"
+// #include "mqtt/mqtt_client.h"
 #include "telegram/telegram.h"
+#include "utils/date.h"
 
-#define INTERVAL 15
-unsigned long start = 0;
+#define INTERVAL 1 * 60UL * 1000UL
 
-void setup()
+namespace
 {
-  Serial.begin(115200);
-  network_handler::begin();
-  light_sensor::begin();
-  telegram::begin();
-  // if (!mqtt_client::begin()) Serial.println("Error during mqtt client startup");
+    unsigned long start = 0;
+    // Monitor how long the light have been on during the day
+    unsigned long time_opened = 0;
+    int lastday = -1;
+
 }
 
-void loop()
+namespace app
 {
-  // mqtt_client::loop();
-  if (light_sensor::detects_light())
-  {
-    if (start == 0)
-      start = millis();
-
-    if ((millis() - start) > (INTERVAL * 60UL * 1000UL))
+    void begin()
     {
-      if (telegram::send_message("Light is open for too long!"))
-        start = millis();
+        Serial.begin(115200);
+        network_handler::begin();
+        light_sensor::begin();
+        telegram::begin();
+        date::begin();
+        lastday = date::get_day_of_the_month();
+        // if (!mqtt_client::begin()) Serial.println("Errror durig mqtt client startup");
     }
-  }
-  else if (start != 0)
-    start = 0;
+    
+    void loop()
+    {
+        // mqtt_client::loop();
+        if (light_sensor::detects_light())
+        {
+            if (start == 0)
+                start = millis();
 
-  delay(500);
+            // Chek if INTERVAL has passed
+            if ((millis() - start) > INTERVAL)
+            {
+                telegram::send_message("Light is open from too long!");
+                time_opened += INTERVAL;
+                start = millis();
+            }
+        }
+        // If the light is on off and has passed < INTERVAL store the time
+        else if (start != 0)
+        {
+            time_opened += millis() - start;
+            start = 0;
+        }
+
+        if (lastday != date::get_day_of_the_month())
+        {
+            lastday = date::get_day_of_the_month();
+            char msg[256];
+            snprintf(msg, sizeof(msg), "Yestrday light have been on for: %lu minutes", time_opened / 60000);
+            time_opened = 0;
+            telegram::send_message(msg);
+        }
+
+        delay(500);
+    }
 }
 ```
 

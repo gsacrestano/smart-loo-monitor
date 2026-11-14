@@ -19,7 +19,6 @@ namespace
 
 namespace app
 {
-
     void begin()
     {
         Serial.begin(115200);
@@ -30,7 +29,7 @@ namespace app
         lastday = date::get_day_of_the_month();
         // if (!mqtt_client::begin()) Serial.println("Errror durig mqtt client startup");
     }
-
+    
     void loop()
     {
         // mqtt_client::loop();
