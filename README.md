@@ -59,7 +59,7 @@ build_flags =
 
 ## Code Overview & Architecture
 
-### Application Flow (`main.cpp`)
+### Application Flow (`app.cpp`)
 
 The main routine manages the state machine for timing and alert dispatching:
 
