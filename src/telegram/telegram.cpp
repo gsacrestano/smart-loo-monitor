@@ -3,7 +3,7 @@
 
 #include "telegram.h"
 
-#define INTERVAL 0.5 * 60UL * 1000UL
+#define INTERVAL 0.5 * 6UL * 1000UL
 
 namespace
 {
