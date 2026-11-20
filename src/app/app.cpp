@@ -3,7 +3,7 @@
 #include "network/network_handler.h"
 #include "telegram/telegram.h"
 #include "light/light_manager.h"
-
+#include "event_handler.h"
 
 namespace app
 {
@@ -18,6 +18,13 @@ namespace app
     void loop()
     {
         // mqtt_client::loop();
+
+        if (telegram::should_check_messages())
+        {
+            stream_message msg = telegram::get_last_message();
+            if (msg.valid)
+                event_handler::handle_event(msg.message.c_str());
+        }
 
         if (light_manager::should_send_alert())
             telegram::send_message("Light is open from too long!");
