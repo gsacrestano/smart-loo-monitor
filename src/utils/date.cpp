@@ -18,7 +18,7 @@ namespace date
         configTzTime(timezone_posix, ntpServer1, ntpServer2);
         getLocalTime(&timeinfo);
         Serial.printf("%d:%d", timeinfo.tm_hour, timeinfo.tm_min);
-        Serial.print("Light Manager started\n");
+        Serial.print("\nDate started\n");
     }
 
     uint8_t get_day_of_the_month()
